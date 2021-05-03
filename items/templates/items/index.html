@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Store</title>
+        <link
+            rel="stylesheet"
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+            crossorigin="anonymous"
+        />
+        <style>
+            #categories > li {
+                list-style: none;
+            }
+        </style>
+
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <form action="" method="POST">
+                        {{form}}
+                        <button class="btn btn-primary" id="create-item">
+                            Submit
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <div id="item-container"></div>
+                </div>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script>
+            const itemContainer = document.getElementById("item-container");
+
+            // Fetching item data
+            function loadData() {
+                axios.get("/items/api/").then((res) => {
+                    
+                    const olContainer = document.createElement("ol");
+                    res.data.forEach((el) => {
+                        const liElement = document.createElement("li");
+                        liElement.innerHTML = `<span>Item: ${el.name}</span><br/><span>Categories: </span>`
+                        liElement.classList.add("mt-3")
+
+                        //Get category details
+                        const catList = document.createElement("ul");
+                        el.categories.forEach((cat) => {
+                            const catListElement = document.createElement("li");
+                            const catNode = document.createTextNode(cat.name);
+                            catListElement.appendChild(catNode);
+                            catList.appendChild(catListElement);
+                        });
+
+
+                        liElement.appendChild(catList);
+                        olContainer.appendChild(liElement);
+                    });
+                    itemContainer.appendChild(olContainer);
+                });
+            }
+
+            loadData();
+
+            const createItemBtn = document.getElementById("create-item");
+            // Submit form
+            createItemBtn.addEventListener("click", (event) => {
+                event.preventDefault();
+                const name = document.getElementById("name").value;
+
+                // Get Selected category values
+                const categories = [];
+                const categoriesOptions = document.querySelectorAll(
+                    "#categories option"
+                );
+                categoriesOptions.forEach((el) => {
+                    if (el.selected) {
+                        // Comments: Explore customizing validation fields of serializers or create read only field
+                        categories.push({"id": el.value, "name": el.label});
+                    }
+                });
+
+                console.log({name, categories});
+                axios.post("/items/api/", { name, categories }).then((res) => {
+
+                    //Clear container
+                    itemContainer.innerHTML = "";
+                    //Create Form
+                    document.querySelector("form").reset()
+                    //Reload data of item container
+                    loadData();
+                });
+            });
+        </script>
+    </body>
+</html>
